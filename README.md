@@ -2,7 +2,7 @@
 
 ## Running the application
 * Clone repo
-* Install Cygwin if necessary
+<!-- * Install Cygwin if necessary
     *	Download Cygwin from https://cygwin.com/setup-x86_64.exe
     *	Install Cygwin
         * Make sure “Category” is selected from the “View” dropdown menu
@@ -13,7 +13,23 @@
         * Find “python39-pip”
             * Under “New” column, select the latest version (as of writing, 23.0.1-1)
         * Click “Next” on the next few screens to finish the installation
-* Open terminal and navigate to repo folder
+* Open terminal and navigate to repo folder -->
+install wsl
+upgrade wsl
+sudo apt install python3-pip
+pip install pipenv --user
+export PATH=/home/???/.local/bin:$PATH
+
+sudo apt update && upgrade
+sudo apt install python3 python3-pip
+
+sudo apt install wget build-essential libncursesw5-dev libssl-dev \
+libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.11
+
+
 * Run `pip install pipenv –user`
 * Run `make install`
 * Create `.env` file in folder with:
