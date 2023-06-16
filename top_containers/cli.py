@@ -105,6 +105,10 @@ def main(  # pylint: disable=R0913,R0914
             accession_record = as_ops.get_record(metadata["accession_uri"])
             instance = create_instance(metadata["instance_type"], top_container_uri)
             accession_record["instances"].append(instance)
+            if modify_data:
+                as_ops.update_record(accession_record)
+            else:
+                logger.info("Dry run, record '%s' not updated", accession_record["uri"])
             output_csv.writerow(
                 {
                     "uri": accession_record["uri"],
@@ -112,11 +116,6 @@ def main(  # pylint: disable=R0913,R0914
                     "data": instance,
                 }
             )
-            if modify_data:
-                as_ops.update_record(accession_record)
-            else:
-                logger.info("Dry run, record '%s' not updated", accession_record["uri"])
-
     logger.info(
         "Total time to complete process: %s",
         timedelta(seconds=perf_counter() - start_time),
