@@ -1,31 +1,36 @@
 # archivesspace-top-containers
 
 ## Running the application
-* Clone repo
-* Install Cygwin if necessary
-    *	Download Cygwin from https://cygwin.com/setup-x86_64.exe
-    *	Install Cygwin
-        * Make sure “Category” is selected from the “View” dropdown menu
-        * Expand “All”
-        * Expand “Python”
-        * Find “python3”
-            * Under “New” column, select the latest version (as of writing, 3.9.10-1)
-        * Find “python39-pip”
-            * Under “New” column, select the latest version (as of writing, 23.0.1-1)
-        * Click “Next” on the next few screens to finish the installation
-* Open terminal and navigate to repo folder
-* Run `pip install pipenv –user`
+* Clone this repo via `Download Zip` from the green `Code` button and extracting the files or via the provided `git` commands
+* If running on a PC with Windows 10 or 11, setup Windows Subsystem for Linux.
+  * Open Windows PowerShell.
+  * Run `wsl --install`.
+  * Click yes that you want to allow this app to make changes.
+  * Reboot your PC.
+  * Open another Windows PowerShell session and select `Ubuntu` from dropdown menu next to the `+`.
+  * If you get an error related to virtualization, find instructions on enabling virtualization for your type of PC.
+  * Create Unix username, this will be used later for assigning the `PATH` environmental variable.
+  * Create unix password, this will be used for `sudo` commands.
+  * Run `sudo add-apt-repository ppa:deadsnakes/ppa`. Press enter to continue when prompted.
+  * Run `sudo apt install python3.11`.
+  * Run `sudo apt install python3-pip`. Press `y` to continue when prompted.
+* Change the working directory to the folder containing the application, 
+e.g. 
+  * If running on PC, use the following format, `cd /mnt/c/archivesspace-top-containers/` where the application is in `C:\archivesspace-top-containers\`
+* Run `pip install pipenv --user`
+  * If running on PC, run `export PATH=/home/<Unix_username>/.local/bin:$PATH` to assign the `PATH` variable.
 * Run `make install`
 * Create `.env` file in folder with:
     ```
-    DEV_USER="username "
+    DEV_USER="username"
     DEV_PASSWORD="password"
     DEV_URL="https://archivesspace-dev.url/staff/api"
-    PROD_USER="username "
+    PROD_USER="username"
     PROD_PASSWORD="password"
     PROD_URL="https://archivesspace-prod.url/staff/api"
     ```
 * Prepare `.csv` file with columns and place it in a folder named `data`:
+* Prepare `<your file name>.csv` file with columns and place it in a folder named `data`:
     * accession_uri
     * instance_type
     * container_type
