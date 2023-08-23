@@ -8,12 +8,12 @@
   * Click yes that you want to allow this app to make changes.
   * Reboot your PC.
   * Open another Windows PowerShell session and select `Ubuntu` from dropdown menu next to the `+`.
-  * If you get an error related virtualization, find instructions on enabling virtualization for your type of PC.
+  * If you get an error related to virtualization, find instructions on enabling virtualization for your type of PC.
   * Create Unix username, this will be used later for assigning the `PATH` environmental variable.
   * Create unix password, this will be used for `sudo` commands.
-  * Run `sudo add-apt-repository ppa:deadsnakes/ppa`.
+  * Run `sudo add-apt-repository ppa:deadsnakes/ppa`. Press enter to continue when prompted.
   * Run `sudo apt install python3.11`.
-  * Run `sudo apt install python3-pip`.
+  * Run `sudo apt install python3-pip`. Press `y` to continue when prompted.
 * Change the working directory to the folder containing the application, 
 e.g. 
   * If running on PC, use the following format, `cd /mnt/c/archivesspace-top-containers/` where the application is in `C:\archivesspace-top-containers\`
@@ -30,6 +30,7 @@ e.g.
     PROD_URL="https://archivesspace-prod.url/staff/api"
     ```
 * Prepare `.csv` file with columns and place it in a folder named `data`:
+* Prepare `<your file name>.csv` file with columns and place it in a folder named `data`:
     * accession_uri
     * instance_type
     * container_type
