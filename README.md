@@ -31,11 +31,13 @@ e.g.
     ```
 * Prepare `.csv` file with columns and place it in a folder named `data`:
 * Prepare `<your file name>.csv` file with columns and place it in a folder named `data`:
-    * accession_uri
-    * instance_type
-    * container_type
-    * indicator
-    * location_uri
+    | Column | Example value|      
+    |-----------------|-----------------|
+    | accession_uri |/repositories/0/accessions/000|
+    | instance_type|mixed_materials|
+    | container_type|DigitalStorage|
+    | indicator|1234abcd|
+    | location_uri|/locations/000|
 	
 * To ensure that data is updated as you expect, the application should first be run without the `modify_data` flag, which will only produce a CSV file of the data that would be posted. It is recommended to execute each of the following commands and review the output before proceeding to the next command:
     * Run without modify_data flag on dev
