@@ -1,6 +1,8 @@
 # archivesspace-top-containers
 
-## Running the application
+# Installing the application
+The following steps are needed to setup the application and only needed to be performed once.
+
 * Clone this repo via `Download Zip` from the green `Code` button and extracting the files or via the provided `git` commands
 * If running on a PC with Windows 10 or 11, setup Windows Subsystem for Linux.
   * Open Windows PowerShell.
@@ -24,13 +26,17 @@ e.g.
     ```
     DEV_USER="username"
     DEV_PASSWORD="password"
-    DEV_URL="https://archivesspace-dev.url/staff/api"
+    DEV_URL="<The dev API URL, typically ends with /staff/api>"
     PROD_USER="username"
     PROD_PASSWORD="password"
-    PROD_URL="https://archivesspace-prod.url/staff/api"
-    ```
-* Prepare `.csv` file with columns and place it in a folder named `data`:
-* Prepare `<your file name>.csv` file with columns and place it in a folder named `data`:
+    PROD_URL="<The prod API URL, typically ends with /staff/api>"
+    ``````
+
+## Running the application
+* Change the working directory to the folder containing the application, 
+e.g. 
+  * If running on PC, use the following format, `cd /mnt/c/archivesspace-top-containers/` where the application is in `C:\archivesspace-top-containers\`
+* Prepare `<your file name>.csv` file with these columns and place it in a folder named `data`:
     | Column | Example value|      
     |-----------------|-----------------|
     | accession_uri |/repositories/0/accessions/000|
@@ -38,31 +44,34 @@ e.g.
     | container_type|DigitalStorage|
     | indicator|1234abcd|
     | location_uri|/locations/000|
-	
-* To ensure that data is updated as you expect, the application should first be run without the `modify_data` flag, which will only produce a CSV file of the data that would be posted. It is recommended to execute each of the following commands and review the output before proceeding to the next command:
+* Open a Windows PowerShell session and select `Ubuntu` from dropdown menu next to the `+`.
+* *MIT-specific instructions*: If running this application away from the campus Wi-Fi, be sure to connect to the VPN in order to access the ArchivesSpace staff API as it is IP-restricted.
+* To ensure that data is updated as you expect, the application should first be run without the `modify_data` flag, which will only produce a CSV file of the data that would be posted. It is recommended to execute each of the following commands and review the output before proceeding to the next command.
     * Run without modify_data flag on dev
 	```
-    pipenv run containers --metadata_csv metadata.csv --as_instance dev
+    pipenv run containers --metadata_csv <your file name>.csv --as_instance dev
     ```
     * Run with modify_data flag on dev
     ```
-	pipenv run containers --metadata_csv metadata.csv --as_instance dev --modify_data
+	pipenv run containers --metadata_csv <your file name>.csv --as_instance dev --modify_data
     ```
     * Run without modify_data flag on prod
 	```
-    pipenv run containers --metadata_csv metadata.csv --as_instance prod
+    pipenv run containers --metadata_csv <your file name>.csv --as_instance prod
     ```
     * Run with modify_data flag on prod
     ```
-    pipenv run containers --metadata_csv metadata.csv --as_instance prod --modify_data
+    pipenv run containers --metadata_csv <your file name>.csv --as_instance prod --modify_data
     ```
+* To verify that top containers posted and linked correctly in the ArchivesSpace UI, search for the accession record specified in the `accession_uri` column and open it. Select `Instances` on the left sidebar to see the instances attached to the accession, which should include all of the top containers that were just posted.
 
-* NOTE: The application defaults to `data` as the folder for input and output files but you can specify a different folder with the `--directory` option.
-```
-pipenv run containers --metadata_csv metadata.csv --as_instance dev --directory test_data
-```
+## Additional parameters
+The application defaults to `data` as the folder for input and output files but you can specify a different folder with the `--directory` option.
+  ```
+  pipenv run containers --metadata_csv <your file name>.csv --as_instance dev --directory test_data
+  ```
 
 Similarly, the application defaults to repository `2` in ArchivesSpace but you can specify a different repository with the `--repository_id` option.
-```
-pipenv run containers --metadata_csv metadata.csv --as_instance dev --repository_id 3
-```
+  ```
+  pipenv run containers --metadata_csv <your file name>.csv --as_instance dev --repository_id 3
+  ```
