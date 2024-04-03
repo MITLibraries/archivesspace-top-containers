@@ -1,6 +1,5 @@
 def create_instance(instance_type: str, top_container_uri: str) -> dict:
-    """
-    Create an ArchivesSpace instance object for attaching to a record.
+    """Create an ArchivesSpace instance object for attaching to a record.
 
     Args:
         instance_type: The type of the instance.
@@ -16,8 +15,7 @@ def create_instance(instance_type: str, top_container_uri: str) -> dict:
 
 
 def create_top_container(metadata: dict, start_date: str) -> dict:
-    """
-    Create an ArchivesSpace top container object from a metadata dict and a date.
+    """Create an ArchivesSpace top container object from a metadata dict and a date.
 
     Metadata dict must have the following keys:
         container_type
