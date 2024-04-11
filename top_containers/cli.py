@@ -2,11 +2,11 @@ import csv
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
 import click
-from asnake.client import ASnakeClient
+from asnake.client import ASnakeClient  # type: ignore[import-untyped]
 
 from top_containers.models import AsOperations
 from top_containers.records import create_instance, create_top_container
@@ -37,23 +37,21 @@ logger = logging.getLogger(__name__)
     prompt="Enter the name to the metadata CSV (e.g. 'metadata.csv'): ",
 )
 @click.option("--modify_data", is_flag=True)
-def main(  # pylint: disable=R0913,R0914
+def main(
     as_instance: str,
     directory: str,
     repository_id: str,
     metadata_csv: str,
-    modify_data: bool,
+    modify_data: bool,  # noqa: FBT001
 ) -> None:
     start_time = perf_counter()
-    current_date = datetime.now()
+    current_date = datetime.now(tz=UTC)
     logging.basicConfig(
         format="%(asctime)s %(levelname)s %(name)s.%(funcName)s(): %(message)s",
         level=logging.INFO,
     )
     as_url = os.environ["PROD_URL"] if as_instance == "prod" else os.environ["DEV_URL"]
-    as_user = (
-        os.environ["PROD_USER"] if as_instance == "prod" else os.environ["DEV_USER"]
-    )
+    as_user = os.environ["PROD_USER"] if as_instance == "prod" else os.environ["DEV_USER"]
     as_password = (
         os.environ["PROD_PASSWORD"]
         if as_instance == "prod"
@@ -80,7 +78,7 @@ def main(  # pylint: disable=R0913,R0914
     as_ops = AsOperations(
         ASnakeClient(baseurl=as_url, username=as_user, password=as_password)
     )
-    with open(f"{directory}/{metadata_csv}", "r", encoding="utf-8") as input_file, open(
+    with open(f"{directory}/{metadata_csv}", encoding="utf-8") as input_file, open(
         f"{directory}/{current_date.strftime('%Y-%m-%d_%H.%M.%S')}.csv",
         "w",
         encoding="utf-8",

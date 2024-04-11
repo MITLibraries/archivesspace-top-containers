@@ -4,9 +4,7 @@ from top_containers.records import create_instance, create_top_container
 def test_create_instance():
     assert create_instance("mixed_materials", "repositories/0/top_containers/000") == {
         "instance_type": "mixed_materials",
-        "sub_container": {
-            "top_container": {"ref": "repositories/0/top_containers/000"}
-        },
+        "sub_container": {"top_container": {"ref": "repositories/0/top_containers/000"}},
     }
 
 

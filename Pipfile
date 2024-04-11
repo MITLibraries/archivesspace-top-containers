@@ -4,18 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-click = "*"
 archivessnake = "*"
-requests-mock = "*"
+click = "*"
 
 [dev-packages]
-bandit = "*"
 black = "*"
 coverage = "*"
 coveralls = "*"
 mypy = "*"
-pylama = {extras = ["all"], version = "*"}
+pre-commit = "*"
 pytest = "*"
+requests-mock = "*"
+ruff = "*"
 
 [requires]
 python_version = "3.11"

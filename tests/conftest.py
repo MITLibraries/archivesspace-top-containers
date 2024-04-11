@@ -1,5 +1,3 @@
-import os
-
 import pytest
 import requests_mock
 from asnake.client import ASnakeClient
@@ -10,8 +8,8 @@ from top_containers.models import AsOperations
 
 @pytest.fixture
 def as_ops():
-    client = ASnakeClient(  # nosec B106
-        baseurl="mock://example.com", username="test", password="test"
+    client = ASnakeClient(
+        baseurl="mock://example.com", username="test", password="test"  # noqa: S106
     )
     return AsOperations(client)
 
@@ -45,29 +43,26 @@ def mock_archivesspace():
         yield mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner():
     return CliRunner()
 
 
 @pytest.fixture(autouse=True)
-def test_env():
-    os.environ = {
-        "DEV_USER": "user",
-        "DEV_PASSWORD": "password",
-        "DEV_URL": "mock://example-dev.com",
-        "PROD_USER": "user",
-        "PROD_PASSWORD": "password",
-        "PROD_URL": "mock://example-prod.com",
-    }
-    yield
+def _test_env(monkeypatch):
+    monkeypatch.setenv("DEV_USER", "user")
+    monkeypatch.setenv("DEV_PASSWORD", "password")
+    monkeypatch.setenv("DEV_URL", "mock://example-dev.com")
+    monkeypatch.setenv("PROD_USER", "user")
+    monkeypatch.setenv("PROD_PASSWORD", "password")
+    monkeypatch.setenv("PROD_URL", "mock://example-prod.com")
 
 
-@pytest.fixture()
+@pytest.fixture
 def working_directory(tmp_path):
     directory = tmp_path / "data"
     directory.mkdir()
     metadata_csv = directory / "test_metadata.csv"
-    with open("tests/fixtures/test_metadata.csv", "r", encoding="utf-8") as csv_file:
+    with open("tests/fixtures/test_metadata.csv", encoding="utf-8") as csv_file:
         metadata_csv.write_text(csv_file.read())
     return f"{directory}/"

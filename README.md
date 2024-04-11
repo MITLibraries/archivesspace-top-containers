@@ -1,4 +1,7 @@
 # archivesspace-top-containers
+This application is used by staff on their local machines to create new top containers in ArchivesSpace via the REST API.  The application accepts a CSV file as input and transforms the data into a JSON payload that is posted to create a new top container. That top container is then linked as an instance to the accession record specified in the CSV file.
+
+The application allows for easy toggling between the `dev` and `prod` ArchiveSpace instances. Also, a `modify_data` flag must be included to overwrite data in ArchivesSpace, otherwise the application only produces a CSV file of the changes that would be made once `modify_data` is included.
 
 # Installing the application
 The following steps are needed to setup the application and only needed to be performed once.
