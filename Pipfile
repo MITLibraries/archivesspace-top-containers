@@ -18,7 +18,7 @@ requests-mock = "*"
 ruff = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"
 
 [scripts]
 containers = "python -c \"from top_containers.cli import main; main()\""
