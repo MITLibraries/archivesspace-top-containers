@@ -9,7 +9,6 @@ import click
 from asnake.client import ASnakeClient  # type: ignore[import-untyped]
 
 from top_containers.models import AsOperations
-from top_containers.records import create_instance, create_top_container
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +30,8 @@ logger = logging.getLogger(__name__)
     required=True,
     default="2",
 )
-@click.option(
-    "--metadata_csv",
-    required=True,
-    prompt="Enter the name to the metadata CSV (e.g. 'metadata.csv'): ",
-)
 @click.option("--modify_data", is_flag=True)
-def main(
-    as_instance: str,
-    directory: str,
-    repository_id: str,
-    metadata_csv: str,
-    modify_data: bool,  # noqa: FBT001
-) -> None:
+def main(as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
     start_time = perf_counter()
     current_date = datetime.now(tz=UTC)
     logging.basicConfig(
@@ -78,42 +66,71 @@ def main(
     as_ops = AsOperations(
         ASnakeClient(baseurl=as_url, username=as_user, password=as_password)
     )
-    with open(f"{directory}/{metadata_csv}", encoding="utf-8") as input_file, open(
-        f"{directory}/{current_date.strftime('%Y-%m-%d_%H.%M.%S')}.csv",
+    with open(f"deleted-{current_date}.csv", "w", encoding="utf-8") as output_file:
+        output_csv = csv.writer(output_file)
+        output_csv.writerow(["event_response"])
+        endpoint = "repositories/2/events"
+        for identifier in as_ops.client.get(f"{endpoint}?all_ids=true").json():
+            event = as_ops.client.get(f"{endpoint}/{identifier}").json()
+            if event["event_type"] == "agreement_signed":
+                output_csv.writerow([event["uri"]])
+
+    ead_id_uri = {}
+    endpoint = "repositories/2/resources"
+    for identifier in as_ops.client.get(f"{endpoint}?all_ids=true").json():
+        resource = as_ops.client.get(f"{endpoint}/{identifier}").json()
+        if not resource.get("ead_id"):
+            ead_id = f"{resource["id_0"]}-{resource["id_1"]}"
+            ead_id_uri[ead_id] = resource["uri"]
+        else:
+            ead_id = resource["ead_id"]
+            ead_id_uri[ead_id] = resource["uri"]
+
+    with open("Agreement-Signed-events.csv", encoding="utf-8") as input_file, open(
+        "Agreement-Signed-events-results.csv",
         "w",
         encoding="utf-8",
     ) as output_file:
-        output_csv = csv.DictWriter(output_file, fieldnames=["uri", "title", "data"])
-        output_csv.writeheader()
-        for metadata in csv.DictReader(input_file):
-            top_container = create_top_container(
-                metadata, current_date.strftime("%Y-%m-%d")
-            )
-            top_container_uri = "Dry run, top container URI not created"
-            if modify_data:
-                top_container_post_response = as_ops.post_new_record(
-                    top_container,
-                    f"repositories/{repository_id}/top_containers",
-                )
-                top_container_uri = top_container_post_response["uri"]
-            output_csv.writerow(
-                {"uri": top_container_uri, "title": "NA", "data": top_container}
-            )
-
-            accession_record = as_ops.get_record(metadata["accession_uri"])
-            instance = create_instance(metadata["instance_type"], top_container_uri)
-            accession_record["instances"].append(instance)
-            if modify_data:
-                as_ops.update_record(accession_record)
-            else:
-                logger.info("Dry run, record '%s' not updated", accession_record["uri"])
-            output_csv.writerow(
-                {
-                    "uri": accession_record["uri"],
-                    "title": accession_record["title"],
-                    "data": instance,
+        output_csv = csv.DictWriter(  # type: ignore[assignment]
+            output_file,
+            fieldnames=["event_uri", "Identifier", "resource_uri", "Gift Agreement"],
+        )
+        output_csv.writeheader()  # type: ignore[attr-defined]
+        for row in csv.DictReader(input_file):
+            gift_agreement = row["Gift Agreement"]
+            if gift_agreement != "N/A":
+                event = {}
+                event["event_type"] = "agreement_signed"
+                event["linked_records"] = [
+                    {"role": "source", "ref": ead_id_uri[row["Identifier"]]},
+                ]
+                event["linked_agents"] = [
+                    {"role": "authorizer", "ref": "/agents/corporate_entities/1"}
+                ]
+                date = {
+                    "date_type": "single",
+                    "label": "event",
+                    "jsonmodel_type": "date",
                 }
-            )
+
+                if gift_agreement == "Pass":
+                    date["expression"] = "date not examined"
+                    event["outcome"] = "pass"
+                elif gift_agreement == "Partial Pass":
+                    date["expression"] = "date not examined"
+                    event["outcome"] = "partial pass"
+                elif gift_agreement == "Fail":
+                    date["begin"] = "2024"
+                    event["outcome"] = "fail"
+                event["date"] = date
+                output_csv.writerow(
+                    {
+                        "Identifier": row["Identifier"],
+                        "Gift Agreement": row["Gift Agreement"],
+                        "resource_uri": ead_id_uri[row["Identifier"]],
+                    }
+                )
+
     logger.info(
         "Total time to complete process: %s",
         timedelta(seconds=perf_counter() - start_time),
