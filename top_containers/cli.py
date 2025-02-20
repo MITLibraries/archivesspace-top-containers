@@ -8,32 +8,24 @@ from time import perf_counter
 import click
 from asnake.client import ASnakeClient  # type: ignore[import-untyped]
 
-from top_containers.models import AsOperations
-
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.pass_context
 @click.option(
     "--as_instance",
     required=True,
     prompt="Select the ArchivesSpace instance to use, either 'dev' or 'prod': ",
     type=click.Choice(["dev", "prod"]),
 )
-@click.option(
-    "--directory",
-    required=True,
-    default="data",
-)
-@click.option(
-    "--repository_id",
-    required=True,
-    default="2",
-)
 @click.option("--modify_data", is_flag=True)
-def main(as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
-    start_time = perf_counter()
-    current_date = datetime.now(tz=UTC)
+def main(ctx: click.Context, as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
+    ctx.ensure_object(dict)
+    ctx.obj["start_time"] = perf_counter()
+    ctx.obj["modify_data"] = modify_data
+    ctx.obj["as_instance"] = as_instance
+
     logging.basicConfig(
         format="%(asctime)s %(levelname)s %(name)s.%(funcName)s(): %(message)s",
         level=logging.INFO,
@@ -53,6 +45,83 @@ def main(as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
         modify_data,
     )
 
+    aspace_client = ASnakeClient(baseurl=as_url, username=as_user, password=as_password)
+    aspace_client.authorize()
+
+    ctx.obj["as_url"] = as_url
+    ctx.obj["aspace_client"] = aspace_client
+
+
+@main.result_callback()
+@click.pass_context
+def post_main_group_subcommand(
+    ctx: click.Context,
+    *_args: tuple,
+    **_kwargs: dict,
+) -> None:
+    """Callback for any work to perform after a main sub-command completes."""
+    logger.info("Application exiting")
+    logger.info(
+        "Total time elapsed: %s",
+        str(
+            timedelta(seconds=perf_counter() - ctx.obj["start_time"]),
+        ),
+    )
+
+
+@main.command()
+@click.pass_context
+def agent_report(ctx: click.Context) -> None:
+    aspace_client = ctx.obj["aspace_client"]
+
+    logger.info("Creating report on ArchivesSpace agents with no linked records")
+    agent_types = ["people", "corporate_entities", "software", "families"]
+
+    agents_with_no_linked_records = []
+    count = 0
+    for agent_type in agent_types:
+        agent_ids = aspace_client.get(f"agents/{agent_type}?all_ids=true").json()
+        logger.info(f"Scanning all {len(agent_ids)} '{agent_type}' agents")
+        for agent_id in agent_ids:
+            count += 1
+
+            if count % 500 == 0:
+                logger.info(f"Scanned {count}/{len(agent_ids)} agents")
+
+            agent = aspace_client.get(f"agents/{agent_type}/{agent_id}").json()
+            if not agent["is_linked_to_published_record"]:
+                agents_with_no_linked_records.append(
+                    {
+                        "agent_ids": agent_id,
+                        "agent_name": agent["display_name"]["sort_name"],
+                        "agent_type": agent_type,
+                        "agent_uri": agent["uri"],
+                    }
+                )
+
+    # write to CSV file
+    logger.info(
+        f"Found {len(agents_with_no_linked_records)} agents with no linked records"
+    )
+    report_filename = "agents_with_no_linked_records.csv"
+    with open(report_filename, "w") as csvfile:
+        field_names = ["agent_ids", "agent_name", "agent_type", "agent_uri"]
+        writer = csv.DictWriter(csvfile, fieldnames=field_names)
+        writer.writeheader()
+        writer.writerows(agents_with_no_linked_records)
+    logger.info(f"Created report: {report_filename}")
+
+
+@main.command()
+@click.pass_context
+def agreement_signed_event_records(ctx: click.Context):
+    modify_data = ctx.obj["modify_data"]
+    as_instance = ctx.obj["as_instance"]
+    as_url = ctx.obj["as_url"]
+    aspace_client = ctx.obj["aspace_client"]
+
+    current_date = datetime.now(tz=UTC)
+
     if modify_data:
         proceed = input(
             f"Data will be modified on '{as_instance}' ({as_url}). Enter y to proceed: "
@@ -63,22 +132,19 @@ def main(as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
             )
             sys.exit()
 
-    as_ops = AsOperations(
-        ASnakeClient(baseurl=as_url, username=as_user, password=as_password)
-    )
     with open(f"deleted-{current_date}.csv", "w", encoding="utf-8") as output_file:
         output_csv = csv.writer(output_file)
         output_csv.writerow(["event_response"])
         endpoint = "repositories/2/events"
-        for identifier in as_ops.client.get(f"{endpoint}?all_ids=true").json():
-            event = as_ops.client.get(f"{endpoint}/{identifier}").json()
+        for identifier in aspace_client.get(f"{endpoint}?all_ids=true").json():
+            event = aspace_client.client.get(f"{endpoint}/{identifier}").json()
             if event["event_type"] == "agreement_signed":
                 output_csv.writerow([event["uri"]])
 
     ead_id_uri = {}
     endpoint = "repositories/2/resources"
-    for identifier in as_ops.client.get(f"{endpoint}?all_ids=true").json():
-        resource = as_ops.client.get(f"{endpoint}/{identifier}").json()
+    for identifier in aspace_client.get(f"{endpoint}?all_ids=true").json():
+        resource = aspace_client.get(f"{endpoint}/{identifier}").json()
         if not resource.get("ead_id"):
             ead_id = f"{resource["id_0"]}-{resource["id_1"]}"
             ead_id_uri[ead_id] = resource["uri"]
@@ -130,8 +196,3 @@ def main(as_instance: str, modify_data: bool) -> None:  # noqa: FBT001
                         "resource_uri": ead_id_uri[row["Identifier"]],
                     }
                 )
-
-    logger.info(
-        "Total time to complete process: %s",
-        timedelta(seconds=perf_counter() - start_time),
-    )
