@@ -275,15 +275,15 @@ def publish_archival_objects_with_unpublished_access_notes(
     as_url = ctx.obj["as_url"]
     aspace_client = ctx.obj["aspace_client"]
 
-    if modify_data:
-        proceed = input(
-            f"Data will be modified on '{as_instance}' ({as_url}). Enter y to proceed: "
-        )
-        if proceed != "y":
-            logger.info(
-                "Halting process based on user input '%s' which is not 'y'", proceed
-            )
-            sys.exit()
+    # if modify_data:
+    #     proceed = input(
+    #         f"Data will be modified on '{as_instance}' ({as_url}). Enter y to proceed: "
+    #     )
+    #     if proceed != "y":
+    #         logger.info(
+    #             "Halting process based on user input '%s' which is not 'y'", proceed
+    #         )
+    #         sys.exit()
 
     archival_objects_df = pd.read_csv(archival_objects_filename)
     archival_objects_dict = archival_objects_df.to_dict(orient="records")
@@ -298,7 +298,7 @@ def publish_archival_objects_with_unpublished_access_notes(
     for batch_num, batch in enumerate(
         itertools.batched(archival_objects_dict, batch_size)
     ):
-        if batch_num < last_batch_num:
+        if batch_num <= last_batch_num:
             logger.info(f"Skipping batch {batch_num} (n={len(batch)})")
             continue
 
