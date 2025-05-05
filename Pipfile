@@ -16,6 +16,7 @@ pre-commit = "*"
 pytest = "*"
 requests-mock = "*"
 ruff = "*"
+pip-audit = "*"
 
 [requires]
 python_version = "3.12"
